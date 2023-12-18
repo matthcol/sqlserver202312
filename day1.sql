@@ -202,11 +202,44 @@ select
 	string_agg(m.title, ', ') as titles,
 	-- 2 following stats are exclusive
 	-- string_agg(m.title, ', ') within group (order by m.year) as titles2,
-	string_agg(m.title, ', ') within group (order by m.year desc) as titles3
-
+	string_agg(m.title, ', ') within group (order by m.year desc) as titles3,
+	string_agg(
+		concat(
+			-- cast(m.year as varchar),
+			m.year,
+			'-',
+			m.title), 
+		' / '
+	) within group (order by m.year desc) as titles3
 from
 	famous_person d
 	left join movie m on m.director_id = d.id
 group by d.id, d.name; -- recette: group by left column, stats on right columns
 
-	
+-- Window clause
+with  famous_person as (
+	select  *
+	from person
+	where name in (
+		'Christopher Nolan',
+		'Alfred Hitchcock',
+		'Fred Astaire',
+		'Quentin Tarantino',
+		'Bourvil',
+		'Clint Eastwood'
+	)
+)
+select 
+	d.id, d.name,
+	m.title,
+	m.year,
+	m.duration,
+	m.synopsis,
+	count(m.id) over (partition by d.id) as nb_movie,
+	coalesce(sum(m.duration) over (partition by d.id), 0) as total_duration,
+	min(m.year) over (partition by d.id) as first_year,
+	max(m.year) over (partition by d.id) as first_year
+from
+	famous_person d
+	left join movie m on m.director_id = d.id
+order by d.id, d.name, m.year desc;
