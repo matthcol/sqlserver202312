@@ -154,6 +154,7 @@ group by a.id, a.name
 having count(*) >= 10
 order by nb_movie desc;
 
+-- sol alt. proposée (à débattre par la suite)
 select outerPlay.name, count(*) as nbMovies
 from movie
 outer apply(
@@ -238,7 +239,11 @@ select
 	count(m.id) over (partition by d.id) as nb_movie,
 	coalesce(sum(m.duration) over (partition by d.id), 0) as total_duration,
 	min(m.year) over (partition by d.id) as first_year,
-	max(m.year) over (partition by d.id) as first_year
+	max(m.year) over (partition by d.id) as first_year, 
+	-- classement duree desc sur toute la table
+	rank() over (order by m.duration desc) as rk_duration_glob,
+	-- classement duree dzc par realisateur
+	rank() over (partition by d.id order by m.duration desc) as rk_duration_director
 from
 	famous_person d
 	left join movie m on m.director_id = d.id
