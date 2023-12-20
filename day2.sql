@@ -264,6 +264,7 @@ where
 	and m.duration <= 145
 order by m.year;
 
+-- https://learn.microsoft.com/en-us/sql/relational-databases/indexes/reorganize-and-rebuild-indexes?view=sql-server-ver16
 -- https://www.mssqltips.com/sqlservertip/6274/types-of-sql-server-indexes/
 SELECT t.name AS TableName,i.name AS IndexName,
        ROUND(avg_fragmentation_in_percent,2) AS avg_fragmentation_in_percent
@@ -271,4 +272,11 @@ FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'SAMPLED') ips
 INNER JOIN sys.tables t on t.[object_id] = ips.[object_id]
 INNER JOIN sys.indexes i ON (ips.object_id = i.object_id) AND (ips.index_id = i.index_id)
 ORDER BY avg_fragmentation_in_percent DESC;
+
+-- ok online sans verrou
+alter index pk_movie on movie reorganize;
+
+-- plus rapide si mode offline
+-- si online, pose un verrou
+alter index pk_person on person rebuild; 
 
